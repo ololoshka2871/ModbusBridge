@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Настройки моста Modbus TCP <-> RTU</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body>
+<form action="/control" method="post">
+    <fieldset>
+        <legend>Настройки моста Modbus TCP <-> RTU</legend>
+        <fieldset>
+            <legend>Настройка последовательного порта</legend>
+            <ul>
+                <li>
+                    <label>COM-порт</label>
+                    <span>
+                    <select name="serial_port">
+                        <option>COM1</option>
+                        <option>COM2</option>
+                    </select>
+                </span>
+                </li>
+                <li>
+                    <label>Скорость</label>
+                    <span>
+                    <select name="serial_port">
+                        <option>9600</option>
+                        <option>38400</option>
+                        <option>57600</option>
+                        <option>115200</option>
+                    </select>
+                </span>
+                </li>
+                <li>
+                    <label>Режим</label>
+                    <span>
+                    <select name="serial_mode">
+                        <option>8N1</option>
+                        <option>8E1</option>
+                        <option>8O1</option>
+                        <option>8N2</option>
+                        <option>8E2</option>
+                        <option>8O2</option>
+                    </select>
+                </span>
+                </li>
+                <li>
+                    <label>Управление передачей через RTS</label>
+                </li>
+            </ul>
+        </fieldset>
+        <fieldset>
+            <legend>Настройка TCP</legend>
+        </fieldset>
+        <fieldset>
+            <legend>Настройка сервера</legend>
+        </fieldset>
+        <span><input type="submit"></span>
+    </fieldset>
+</form>
+</body>
+
+</html>
