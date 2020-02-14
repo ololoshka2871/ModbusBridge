@@ -10,7 +10,7 @@ class BridgeController:
     def __init__(self):
         self.executable = os.path.join(sys._MEIPASS, 'bin', 'mbusd') \
             if getattr(sys, 'frozen', False) else 'bin/mbusd'
-        self.port = None
+        self._port = None
         self.speed = 57600
         self.mode = '8N1'
         self.tcp_port = 502
@@ -27,6 +27,14 @@ class BridgeController:
         self.log = logging.getLogger("BridgeController")
 
         self.process = None
+        
+    def get_port(self):
+        return self._port
+        
+    def set_port(self, v)
+        self._port = v
+        
+    port = property(get_port, set_port, None, 'Это свойство port.')
 
     def status(self):
         return self._status
