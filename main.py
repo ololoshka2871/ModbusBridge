@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 
 from serial_enumerator import get_serial_ports
+from BrigeController import BridgeController
 
 from flask import Flask, render_template, redirect, url_for, request, send_from_directory
 
@@ -10,6 +11,8 @@ app = Flask(__name__)
 speeds = (9600, 38400, 57600, 115200)
 modes = ['8{}{}'.format(parity, stop) for parity in ('N', 'E', 'O') for stop in (1, 2)]
 last_error = "Сервер не запущен"
+
+bridge = BridgeController()
 
 settings = {
     "default_port": None,
@@ -21,15 +24,15 @@ settings = {
     "rtu_max_trys": 0,
     "rtu_min_delay": 1,
     "rtu_rx_timeout": 10,
-    "tcp_timeout": 60,
-    "server_is_running": False
+    "tcp_timeout": 60
 }
 
 
 @app.route('/', methods=['GET'])
 def index():
     ports = get_serial_ports()
-    return render_template('index.html', ports=ports, speeds=speeds, modes=modes, last_error=last_error, **settings)
+    return render_template('index.html', ports=ports, speeds=speeds, modes=modes, last_error=last_error,
+                           server_is_running=bridge.status(), **settings)
 
 
 @app.route('/control', methods=['POST'])
@@ -37,9 +40,9 @@ def control():
     global settings
     global last_error
 
-    if settings["server_is_running"] or len(request.form) == 0:
-        settings["server_is_running"] = False
-        last_error = None
+    if bridge.status() or len(request.form) == 0:
+        bridge.stop()
+        last_error = bridge.last_error()
     else:
         res = parse_form(request.form)
 
@@ -48,8 +51,10 @@ def control():
             return redirect(url_for('index'))
         else:
             settings = res
-            settings["server_is_running"] = True
-            last_error = None
+            if not bridge.start():
+                last_error = bridge.last_error().replace('\n', '<p>')
+            else:
+                last_error = None
 
     return redirect(url_for('index'))
 
