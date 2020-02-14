@@ -176,6 +176,9 @@
                             </div>
                         </div>
                     </div>
+                    {% if last_error %}
+                    <h4 class="btn--red">{{last_error}}</h4>
+                    {% endif %}
                     <div class="p-t-20">
                         <button class="btn btn--radius btn--green" type="submit">Запустить</button>
                     </div>
