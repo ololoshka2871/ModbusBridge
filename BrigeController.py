@@ -1,12 +1,15 @@
 # -*- coding: utf8 -*-
 
 import logging
+import os
+import sys
 import subprocess
 
 
 class BridgeController:
     def __init__(self):
-        self.executable = 'echo'
+        self.executable = os.path.join(sys._MEIPASS, 'bin', 'mbusd') \
+            if getattr(sys, 'frozen', False) else 'bin/mbusd'
         self.port = None
         self.speed = 57600
         self.mode = '8N1'
@@ -56,13 +59,13 @@ class BridgeController:
 
         try:
             o, e = self.process.communicate(timeout=0.5)
-        except TimeoutError:
+        except subprocess.TimeoutExpired:
             # success
             self._status = True
             return True
 
         exit_code = self.process.poll()
-        self._last_error = 'Error starting daemon:\n{}\n(exit code {})'.format(o.decode(), exit_code)
+        self._last_error = 'Error starting daemon:\n{}\n(exit code {})'.format(e.decode(), exit_code)
         self.process = None
         self._status = False
         return False
@@ -71,6 +74,14 @@ class BridgeController:
         self.log.warning('Stopping bridge...')
         if self.process:
             self.process.terminate()
+            try:
+                self.process.communicate(timeout=1)
+                self._last_error = None
+            except subprocess.TimeoutExpired:
+                err = 'Stopping daemon failed, zombie created'
+                self.log.warning(err)
+                self._last_error = err
+
             self.process = None
 
         self._status = False

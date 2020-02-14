@@ -1,10 +1,13 @@
-#!/user/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf8 -*-
 
 from serial_enumerator import get_serial_ports
 from BrigeController import BridgeController
+from threading import Timer
+import atexit
 
 from flask import Flask, render_template, redirect, url_for, request, send_from_directory
+import webbrowser
 
 app = Flask(__name__)
 
@@ -51,6 +54,18 @@ def control():
             return redirect(url_for('index'))
         else:
             settings = res
+
+            bridge.port = settings['default_port']
+            bridge.speed = settings['default_speed']
+            bridge.mode = settings['default_mode']
+            bridge.use_rts = settings['default_use_rts']
+            bridge.tcp_port = settings['tcp_port_selector']
+            bridge.max_con = settings['tcp_max_connections']
+            bridge.max_retries = settings['rtu_max_trys']
+            bridge.pause = settings['rtu_min_delay']
+            bridge.wait = settings['rtu_rx_timeout']
+            bridge.tcp_timeout = settings['tcp_timeout']
+
             if not bridge.start():
                 last_error = bridge.last_error().replace('\n', '<p>')
             else:
@@ -95,5 +110,11 @@ def parse_form(form_values):
     return new_settings
 
 
+def open_browser():
+    webbrowser.open_new('http://127.0.0.1:5000/')
+
+
 if __name__ == "__main__":
+    Timer(1, open_browser).start()
+    atexit.register(lambda: bridge.stop())
     app.run(debug=True, use_debugger=False, use_reloader=False, passthrough_errors=True)
