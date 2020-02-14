@@ -11,6 +11,7 @@ import webbrowser
 
 app = Flask(__name__)
 
+www_port = 7123
 speeds = (9600, 38400, 57600, 115200)
 modes = ['8{}{}'.format(parity, stop) for parity in ('N', 'E', 'O') for stop in (1, 2)]
 last_error = "Сервер не запущен"
@@ -111,10 +112,10 @@ def parse_form(form_values):
 
 
 def open_browser():
-    webbrowser.open_new('http://127.0.0.1:5000/')
+    webbrowser.open_new('http://127.0.0.1:{}/'.format(www_port))
 
 
 if __name__ == "__main__":
     Timer(1, open_browser).start()
     atexit.register(lambda: bridge.stop())
-    app.run(debug=True, use_debugger=False, use_reloader=False, passthrough_errors=True)
+    app.run(debug=True, use_debugger=False, use_reloader=False, passthrough_errors=True, port=www_port)
