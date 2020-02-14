@@ -1,65 +1,211 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <!-- Required meta tags-->
     <meta charset="UTF-8">
-    <title>Настройки моста Modbus TCP <-> RTU</title>
-    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Colorlib Templates">
+    <meta name="author" content="Colorlib">
+    <meta name="keywords" content="Colorlib Templates">
+
+    <!-- Title Page-->
+    <title>Modbus TCP to RTU bridge</title>
+
+    <!-- Icons font CSS-->
+    <link href="/static/vendor/mdi-font/css/material-design-iconic-font.min.css" rel="stylesheet" media="all">
+    <link href="/static/vendor/font-awesome-4.7/css/font-awesome.min.css" rel="stylesheet" media="all">
+    <!-- Font special for pages-->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i"
+          rel="stylesheet">
+
+    <!-- Vendor CSS-->
+    <link href="/static/vendor/select2/select2.min.css" rel="stylesheet" media="all">
+    <link href="/static/vendor/datepicker/daterangepicker.css" rel="stylesheet" media="all">
+
+    <!-- Main CSS-->
+    <link href="/static/css/main.css" rel="stylesheet" media="all">
 </head>
 
 <body>
-<form action="/control" method="post">
-    <fieldset>
-        <legend>Настройки моста Modbus TCP <-> RTU</legend>
-        <fieldset>
-            <legend>Настройка последовательного порта</legend>
-            <ul>
-                <li>
-                    <label>COM-порт</label>
-                    <span>
-                    <select name="serial_port">
-                        <option>COM1</option>
-                        <option>COM2</option>
-                    </select>
-                </span>
-                </li>
-                <li>
-                    <label>Скорость</label>
-                    <span>
-                    <select name="serial_port">
-                        <option>9600</option>
-                        <option>38400</option>
-                        <option>57600</option>
-                        <option>115200</option>
-                    </select>
-                </span>
-                </li>
-                <li>
-                    <label>Режим</label>
-                    <span>
-                    <select name="serial_mode">
-                        <option>8N1</option>
-                        <option>8E1</option>
-                        <option>8O1</option>
-                        <option>8N2</option>
-                        <option>8E2</option>
-                        <option>8O2</option>
-                    </select>
-                </span>
-                </li>
-                <li>
-                    <label>Управление передачей через RTS</label>
-                </li>
-            </ul>
-        </fieldset>
-        <fieldset>
-            <legend>Настройка TCP</legend>
-        </fieldset>
-        <fieldset>
-            <legend>Настройка сервера</legend>
-        </fieldset>
-        <span><input type="submit"></span>
-    </fieldset>
-</form>
-</body>
+<div class="page-wrapper bg-blue p-t-100 p-b-100 font-robo">
+    <div class="wrapper wrapper--w680">
+        <div class="card card-1">
+            <div class="card-body">
+                <h2 class="title">Мост Modbus TCP <-> RTU</h2>
+                <form method="POST" action="/control">
+                    {% if not server_is_running %}
+                    <h4 class="title">Последовательный порт</h4>
+                    <div class="input-group">
+                        <div class="rs-select2 js-select-simple select--no-search">
+                            <select id="ser_port_selector" name="serial_port" autofocus required>
+                                <option disabled="disabled"
+                                        {% if not default_port %}
+                                        selected="selected"
+                                        {% endif %}
+                                        value="">COM-порт
+                                </option>
+                                {% for port in ports %}
+                                <option value="{{ port.device }}"
+                                        {% if default_port== port.device %}
+                                        selected="selected"
+                                        {% endif %}
+                                >{{ port.description }} - {{port.device}}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="select-dropdown"></div>
+                        </div>
+                    </div>
+                    <div class="row row-space">
+                        <div class="col-2">
+                            <div class="input-group">
+                                <div class="rs-select2 js-select-simple select--no-search">
+                                    <select name="serial_speed" required>
+                                        <option disabled="disabled"
+                                                {% if not default_speed %}
+                                                selected="selected"
+                                                {% endif %}
+                                                value="">Скорость
+                                        </option>
+                                        {% for speed in speeds %}
+                                        <option
+                                                {% if default_speed== speed %}
+                                                selected="selected"
+                                                {% endif %}
+                                        >{{ speed }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="select-dropdown"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="input-group">
+                                <div class="rs-select2 js-select-simple select--no-search">
+                                    <select name="serial_mode" required>
+                                        <option disabled="disabled"
+                                                {% if not default_mode %}
+                                                selected="selected"
+                                                {% endif %}
+                                                value="">Режим порта
+                                        </option>
+                                        {% for mode in modes %}
+                                        <option
+                                                {% if default_mode== node %}
+                                                selected="selected"
+                                                {% endif %}
+                                        >{{mode}}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="select-dropdown"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="rs-select2 js-select-simple select--no-search">
+                            <select name="serial_rts" required>
+                                <option value="True"
+                                        {% if default_use_rts %}
+                                        selected="selected"
+                                        {% endif %}
+                                >Управлять передачей через RTS
+                                </option>
+                                <option value="False"
+                                        {% if not default_use_rts %}
+                                        selected="selected"
+                                        {% endif %}
+                                >Не управлять сигналом RTS
+                                </option>
+                            </select>
+                            <div class="select-dropdown"></div>
+                        </div>
+                    </div>
+                    <h4 class="title">TCP сервер</h4>
+                    <div class="row row-space">
+                        <div class="col-2">
+                            <div class="input-group">
+                                <label for="tcp_port_selector">TCP-порт</label>
+                                <input class="input--style-1" id="tcp_port_selector" type="number" name="tcp_port"
+                                       min="1" max="65535" value="{{tcp_port_selector}}">
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="input-group">
+                                <label for="tcp_max_con">Макс. соединений</label>
+                                <input class="input--style-1" id="tcp_max_con" type="number"
+                                       placeholder="Макс. соединений" name="tcp_max_connections"
+                                       min="1" max="32" value="{{tcp_max_connections}}">
+                            </div>
+                        </div>
+                    </div>
+                    <h4 class="title">Настройки передачи</h4>
+                    <div class="row row-space">
+                        <div class="col-2">
+                            <div class="input-group">
+                                <label for="rtu_max_trys">Максимум повторов</label>
+                                <input class="input--style-1" id="rtu_max_trys"
+                                       type="number" name="rtu_max_trys" min="0" max="15" value="{{rtu_max_trys}}"/>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="input-group">
+                                <label for="rtu_min_delay">Задержка, мс</label>
+                                <input class="input--style-1" id="rtu_min_delay"
+                                       type="number" name="rtu_min_delay" min="1" max="100" value="{{rtu_min_delay}}"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-space">
+                        <div class="col-2">
+                            <div class="input-group">
+                                <label for="rtu_rx_timeout">Таймаут ожидания ответа, мс</label>
+                                <input class="input--style-1" id="rtu_rx_timeout"
+                                       type="number" name="rtu_rx_timeout" min="1" max="1000"
+                                       value="{{rtu_rx_timeout}}"/>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="input-group">
+                                <label for="tcp_timeout">Таймаут бездействия клиента, с</label>
+                                <input class="input--style-1" id="tcp_timeout"
+                                       type="number" name="tcp_timeout" min="0" max="1000" value="{{tcp_timeout}}"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-t-20">
+                        <button class="btn btn--radius btn--green" type="submit">Запустить</button>
+                    </div>
+                    {% else %}
+                    <div class="row row-space">
+                        <div class="col-4">
+                            <h4>Сервер запущен: TCP[{{tcp_port_selector}}] <-> {{default_port}}[{{default_speed}}]</h4>
+                        </div>
+                    </div>
+                    <div class="p-t-20">
+                        <button class="btn btn--radius btn--red" type="submit">Остановить</button>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Jquery JS-->
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<!-- Vendor JS-->
+<script src="/static/vendor/select2/select2.min.js"></script>
+<script src="/static/vendor/datepicker/moment.min.js"></script>
+<script src="/static/vendor/datepicker/daterangepicker.js"></script>
+
+<!-- Main JS-->
+<script src="/static/js/global.js"></script>
+
+</body><!-- This templates was made by Colorlib (https://colorlib.com) -->
 
 </html>
+<!-- end document-->

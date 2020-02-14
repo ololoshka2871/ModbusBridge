@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Настройки моста Modbus TCP <-> RTU</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <script src="/static/jquery-3.4.1.slim.min.js"></script>
+    <script src="/static/popper.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body class="bg-light">
+<script src="/static/bootstrap.bundle.min.js"></script>
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 order-md-1">
+            <form class="application-form" action="/control" method="post">
+                <fieldset class="bs-example">
+                    <legend>Настройки моста Modbus TCP <-> RTU</legend>
+                    <fieldset>
+                        <legend>Настройка последовательного порта</legend>
+                        <ul>
+                            <li>
+                                <label for="ser_port_selector">COM-порт</label>
+                                <select id="ser_port_selector" name="serial_port" autofocus>
+                                    <option>COM1</option>
+                                    <option>COM2</option>
+                                </select>
+                            </li>
+                            <li>
+                                <label>Скорость</label>
+                                <span>
+                    <select name="serial_port">
+                        <option>9600</option>
+                        <option>38400</option>
+                        <option>57600</option>
+                        <option>115200</option>
+                    </select>
+                    </span>
+                            </li>
+                            <li>
+                                <label>Режим</label>
+                                <span>
+                    <select name="serial_mode">
+                        <option>8N1</option>
+                        <option>8E1</option>
+                        <option>8O1</option>
+                        <option>8N2</option>
+                        <option>8E2</option>
+                        <option>8O2</option>
+                    </select>
+                    </span>
+                            </li>
+                            <li>
+                                <label>Управление передачей через RTS</label>
+                                <span>
+                        <input type="checkbox" name="rts_control" checked/>
+                    </span>
+                            </li>
+                        </ul>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Настройка TCP</legend>
+                        <ul>
+                            <li>
+                                <label>TCP-порт</label>
+                                <span>
+                        <input type="number" name="tcp_port" min="1" max="65535" value="502"/>
+                    </span>
+                            </li>
+                            <li>
+                                <label>Максимум одновременных подключений</label>
+                                <span>
+                        <input type="number" name="tcp_max_con" min="1" max="32" value="3"/>
+                    </span>
+                            </li>
+                        </ul>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Настройка сервера</legend>
+                        <ul>
+                            <li>
+                                <label>Максимум повторов</label>
+                                <span>
+                        <input type="number" name="rtu_max_trys" min="0" max="15" value="1"/>
+                    </span>
+                            </li>
+                            <li>
+                                <label>Минимальная пауза между сообщениями, мс</label>
+                                <span>
+                        <input type="number" name="rtu_min_delay" min="1" max="100" value="1"/>
+                    </span>
+                            </li>
+                            <li>
+                                <label>Таймаут ожидания ответа, мс</label>
+                                <span>
+                        <input type="number" name="rtu_rx_timeout" min="1" max="1000" value="10"/>
+                    </span>
+                            </li>
+                            <li>
+                                <label>Таймаут бездействия клиента, с</label>
+                                <span>
+                        <input type="number" name="tcp_client_timeout" min="0" max="1000" value="60"/>
+                    </span>
+                            </li>
+                        </ul>
+                    </fieldset>
+                    <span><input class="btn btn-secondary" type="submit" value="Запуск"></span>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+
+</html>

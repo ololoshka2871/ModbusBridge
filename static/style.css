@@ -1,0 +1,140 @@
+$color-invalid: red;
+$color-valid: green;
+
+@mixin field-outline($color) {
+    outline: $color solid 2px;
+}
+
+@mixin message-invalid($message) {
+    color: $color-invalid;
+    content: $message;
+}
+
+* {
+    outline: none;
+}
+
+.form-heading {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 36px;
+    font-weight: bold;
+    margin: 5px;
+}
+
+.application-form {
+    border: 1px solid black;
+    box-sizing: border-box;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 15px auto;
+    padding: 15px;
+    width: 600px;
+}
+
+.helper-text {
+    font-size: 12px;
+    margin-botom: 10px;
+    text-align: right;
+}
+
+.field-row {
+    position: relative;
+    width: 100%;
+}
+
+.form-label {
+    display: inline-block;
+    font-size: 16px;
+    margin: 0 5px 5px 0;
+    text-align: right;
+    width: 100px;
+}
+
+.field {
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    display: inline-block;
+    font-size: 16px;
+    padding: 10px;
+    margin-bottom: 15px;
+    width: 240px;
+
+    &.field-short {
+        width: 70px;
+    }
+}
+
+.message {
+    display: inline-block;
+}
+
+.form-button {
+    background: linear-gradient(180deg, #808080, #2a2a2a);
+    border: none;
+    border-radius: 2px;
+    color: white;
+    display: inline-block;
+    padding: 10px;
+    font-size: 16px;
+
+}
+
+:required + .message::before {
+    content: "* ";
+}
+
+.text-field {
+    &:focus:required:valid {
+        @include field-outline($color-valid);
+    }
+
+    &:focus:required:invalid {
+        @include field-outline($color-invalid);
+    }
+}
+
+.date-field {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+    &:focus:in-range {
+        @include field-outline($color-valid);
+    }
+
+    &:focus:out-of-range {
+        @include field-outline($color-invalid);
+    }
+}
+
+.website-field {
+    &:focus:valid {
+        @include field-outline($color-valid);
+    }
+
+    &:focus:invalid {
+        @include field-outline($color-invalid);
+    }
+}
+
+.first-name-field:focus:invalid + .message::after {
+    color: $color-invalid;
+    content: "Please enter your first name";
+}
+
+.last-name-field:focus:invalid + .message::after {
+    @include message-invalid("Please enter your last name");
+}
+
+.dob-field:focus:out-of-range + .message::after {
+    @include message-invalid("Date is out of range");
+}
+
+.tel-field:focus:invalid + .message::after {
+    @include message-invalid("Invalid telephone number");
+}
+
+.email-field:focus:invalid + .message::after {
+    @include message-invalid("Invalid email address");
+}
+
+.website-field:focus:invalid + .message::after {
+    @include message-invalid("Invalid website URL");
+}
