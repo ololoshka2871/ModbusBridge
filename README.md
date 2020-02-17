@@ -54,6 +54,7 @@ $ make
 Выполните команду
 ```py
 $ pyinstaller -w -F 
+    -i static/bridge.ico
     --add-data "bin;bin" 
     --add-data "static;static" 
     --add-data "templates;templates" 
