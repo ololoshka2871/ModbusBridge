@@ -10,6 +10,7 @@ class BridgeController:
     def __init__(self):
         self.executable = os.path.join(sys._MEIPASS, 'bin', 'mbusd') \
             if getattr(sys, 'frozen', False) else 'bin/mbusd'
+        
         self._port = None
         self.speed = 57600
         self.mode = '8N1'
@@ -28,10 +29,12 @@ class BridgeController:
 
         self.process = None
         
+        self.log.warning('brige executable: %s', self.executable)
+        
     def get_port(self):
         return self._port
         
-    def set_port(self, v)
+    def set_port(self, v):
         self._port = v
         
     port = property(get_port, set_port, None, 'Это свойство port.')

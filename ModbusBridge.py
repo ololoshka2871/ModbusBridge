@@ -5,11 +5,17 @@ from serial_enumerator import get_serial_ports
 from BrigeController import BridgeController
 from threading import Timer
 import atexit
+import re
 
 from flask import Flask, render_template, redirect, url_for, request, send_from_directory
 import webbrowser
 
-app = Flask(__name__)
+if getattr(sys, 'frozen', False):
+    template_folder = os.path.join(sys._MEIPASS, 'templates')
+    static_folder = os.path.join(sys._MEIPASS, 'static')
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+else:
+    app = Flask(__name__)
 
 www_port = 7123
 speeds = (9600, 38400, 57600, 115200)
@@ -18,6 +24,9 @@ last_error = "Сервер не запущен"
 
 bridge = BridgeController()
 
+COM_pattern = re.compile('COM(\d+)')
+
+# Defaults
 settings = {
     "default_port": None,
     "default_speed": None,
@@ -25,9 +34,9 @@ settings = {
     "default_use_rts": True,
     "tcp_port_selector": 502,
     "tcp_max_connections": 3,
-    "rtu_max_trys": 0,
-    "rtu_min_delay": 1,
-    "rtu_rx_timeout": 10,
+    "rtu_max_trys": 1,
+    "rtu_min_delay": 2,
+    "rtu_rx_timeout": 25,
     "tcp_timeout": 60
 }
 
@@ -56,7 +65,7 @@ def control():
         else:
             settings = res
 
-            bridge.port = settings['default_port']
+            bridge.port = apply_msys2_portname(settings['default_port'])
             bridge.speed = settings['default_speed']
             bridge.mode = settings['default_mode']
             bridge.use_rts = settings['default_use_rts']
@@ -109,6 +118,11 @@ def parse_form(form_values):
         return str(e)
 
     return new_settings
+
+
+def apply_msys2_portname(comport):
+    match = COM_pattern.match(comport)
+    return '/dev/ttyS{}'.format(int(match[1]) - 1)
 
 
 def open_browser():

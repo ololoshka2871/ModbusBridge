@@ -1,1 +1,0 @@
-pyinstaller -w -F --add-data "bin;bin" --add-data "static;static" --add-data "templates;templates" main.py
