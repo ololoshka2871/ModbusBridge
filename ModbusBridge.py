@@ -6,9 +6,13 @@ from BrigeController import BridgeController
 from threading import Timer
 import atexit
 import re
+import os
+import sys
+
 
 from flask import Flask, render_template, redirect, url_for, request, send_from_directory
 import webbrowser
+
 
 if getattr(sys, 'frozen', False):
     template_folder = os.path.join(sys._MEIPASS, 'templates')
@@ -132,4 +136,5 @@ def open_browser():
 if __name__ == "__main__":
     Timer(1, open_browser).start()
     atexit.register(lambda: bridge.stop())
-    app.run(debug=True, use_debugger=False, use_reloader=False, passthrough_errors=True, port=www_port)
+    app.run(debug=True, use_debugger=False, use_reloader=False, passthrough_errors=True, 
+        port=www_port, host='0.0.0.0')
