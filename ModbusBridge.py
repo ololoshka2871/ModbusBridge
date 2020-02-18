@@ -9,6 +9,7 @@ import os
 import sys
 import webbrowser
 import socket
+import platform
 
 import netifaces
 from flask import Flask, render_template, redirect, url_for, request, send_from_directory
@@ -16,7 +17,6 @@ from flask import Flask, render_template, redirect, url_for, request, send_from_
 from serial_enumerator import get_serial_ports
 from BrigeController import BridgeController
 from mDNSanoncer import mDNSanoncer
-
 
 if getattr(sys, 'frozen', False):
     template_folder = os.path.join(sys._MEIPASS, 'templates')
@@ -56,10 +56,10 @@ Portrecord = namedtuple('Portrecord', 'device description inaccesable')
 
 @app.route('/', methods=['GET'])
 def index():
-    ports = get_serial_ports() 
-    return render_template('index.html', ports=filter_ports(ports), 
-                            speeds=speeds, modes=modes, last_error=last_error,
-                            server_is_running=bridge.status(), **settings)
+    ports = get_serial_ports()
+    return render_template('index.html', ports=filter_ports(ports),
+                           speeds=speeds, modes=modes, last_error=last_error,
+                           server_is_running=bridge.status(), **settings)
 
 
 @app.route('/control', methods=['POST'])
@@ -80,7 +80,7 @@ def control():
         else:
             settings = res
 
-            bridge.port = apply_msys2_portname(settings['default_port'])
+            bridge.port = patch_portname(settings['default_port'])
             bridge.speed = settings['default_speed']
             bridge.mode = settings['default_mode']
             bridge.use_rts = settings['default_use_rts']
@@ -103,18 +103,23 @@ def control():
 
 def filter_ports(portlist):
     newports = []
-    for port in portlist:
-        match = COM_pattern.match(port.device)
-        inaccesable = int(match[1]) > 64
-        p = Portrecord(
-            device=port.device,
-            description = '{} (недоступно)'.format(port.description)
-                if inaccesable else port.description,
-            inaccesable = inaccesable
-        )
-        newports.append(p)
-        
-    return newports
+    if platform.system() == 'Linux':
+        return [Portrecord(
+            device=p.device,
+            description='{} ({})'.format(p.description, p.device),
+            inaccesable=False) for p in portlist]
+    else:
+        for port in portlist:
+            match = COM_pattern.match(port.device)
+            inaccesable = int(match[1]) > 64
+            p = Portrecord(
+                device=port.device,
+                description='{} (недоступно)'.format(port.description) if inaccesable else port.description,
+                inaccesable=inaccesable
+            )
+            newports.append(p)
+
+        return newports
 
 
 @app.route('/static/<path:path>', methods=['GET'])
@@ -153,21 +158,25 @@ def parse_form(form_values):
     return new_settings
 
 
-def apply_msys2_portname(comport):
-    match = COM_pattern.match(comport)
-    return '/dev/ttyS{}'.format(int(match[1]) - 1)
+def patch_portname(comport):
+    if platform.system() == 'Linux':
+        return comport
+    else:
+        # for msys
+        match = COM_pattern.match(comport)
+        return '/dev/ttyS{}'.format(int(match[1]) - 1)
 
 
 def all_my_ips():
-    interfaces = netifaces.interfaces() 
+    interfaces = netifaces.interfaces()
 
-    ip4 = [netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr'] 
-        for iface in interfaces
-        if netifaces.AF_INET in netifaces.ifaddresses(iface)]
-    ip6 = [netifaces.ifaddresses(iface)[netifaces.AF_INET6][0]['addr'] 
-        for iface in interfaces
-        if netifaces.AF_INET6 in netifaces.ifaddresses(iface)]
-        
+    ip4 = [netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
+           for iface in interfaces
+           if netifaces.AF_INET in netifaces.ifaddresses(iface)]
+    ip6 = [netifaces.ifaddresses(iface)[netifaces.AF_INET6][0]['addr'].split('%')[0]
+           for iface in interfaces
+           if netifaces.AF_INET6 in netifaces.ifaddresses(iface)]
+
     ip4.remove('127.0.0.1')
     ip6.remove('::1')
     return [socket.inet_pton(socket.AF_INET, ip) for ip in ip4] + \
@@ -176,7 +185,7 @@ def all_my_ips():
 
 def register_mdns_records():
     hostname = socket.gethostname()
-    
+
     ips = all_my_ips()
 
     http_anoncer.service = "_http._tcp.local."
@@ -185,7 +194,7 @@ def register_mdns_records():
     http_anoncer.address = ips
     http_anoncer.desc = {'path': '/'}
     http_anoncer.server = "{}-conf.modbusbridge.local.".format(hostname)
-    
+
     modbus_tcp_anoncer.service = "_mbtcp._tcp.local."
     modbus_tcp_anoncer.name = "Modbus TCP to RTU bridge._mbtcp._tcp.local."
     # modbus_tcp_anoncer.port # after configuration done
@@ -209,5 +218,5 @@ if __name__ == "__main__":
     atexit.register(at_stop)
     register_mdns_records()
     http_anoncer.start()
-    app.run(debug=True, use_debugger=False, use_reloader=False, passthrough_errors=True, 
-        port=www_port, host='0.0.0.0')
+    app.run(debug=True, use_debugger=False, use_reloader=False, passthrough_errors=True,
+            port=www_port, host='0.0.0.0')

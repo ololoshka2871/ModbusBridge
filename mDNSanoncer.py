@@ -39,6 +39,7 @@ class mDNSanoncer:
             mDNSanoncer._log.warning('Unredistring mDNS record {}'.format(self._info))
             mDNSanoncer.zeroconf.unregister_service(self._info)
             self._info = None
-    
+
+    @staticmethod
     def close():
         mDNSanoncer.zeroconf.close()
