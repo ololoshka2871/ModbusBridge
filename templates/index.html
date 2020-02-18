@@ -47,8 +47,11 @@
                                 </option>
                                 {% for port in ports %}
                                 <option value="{{ port.device }}"
-                                        {% if default_port== port.device %}
+                                        {% if default_port == port.device %}
                                         selected="selected"
+                                        {% endif %}
+                                        {% if port.inaccesable %}
+                                        disabled="disabled"
                                         {% endif %}
                                 >{{ port.description }}
                                 </option>

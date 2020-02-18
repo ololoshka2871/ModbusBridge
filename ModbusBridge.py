@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-from serial_enumerator import get_serial_ports
-from BrigeController import BridgeController
 from threading import Timer
+from collections import namedtuple
 import atexit
 import re
 import os
 import sys
-
-
-from flask import Flask, render_template, redirect, url_for, request, send_from_directory
 import webbrowser
+import socket
+
+import netifaces
+from flask import Flask, render_template, redirect, url_for, request, send_from_directory
+
+from serial_enumerator import get_serial_ports
+from BrigeController import BridgeController
+from mDNSanoncer import mDNSanoncer
 
 
 if getattr(sys, 'frozen', False):
@@ -28,13 +32,16 @@ last_error = "Сервер не запущен"
 
 bridge = BridgeController()
 
+http_anoncer = mDNSanoncer()
+modbus_tcp_anoncer = mDNSanoncer()
+
 COM_pattern = re.compile('COM(\d+)')
 
 # Defaults
 settings = {
     "default_port": None,
-    "default_speed": None,
-    "default_mode": None,
+    "default_speed": 57600,
+    "default_mode": '8N1',
     "default_use_rts": True,
     "tcp_port_selector": 502,
     "tcp_max_connections": 3,
@@ -44,12 +51,15 @@ settings = {
     "tcp_timeout": 60
 }
 
+Portrecord = namedtuple('Portrecord', 'device description inaccesable')
+
 
 @app.route('/', methods=['GET'])
 def index():
-    ports = get_serial_ports()
-    return render_template('index.html', ports=ports, speeds=speeds, modes=modes, last_error=last_error,
-                           server_is_running=bridge.status(), **settings)
+    ports = get_serial_ports() 
+    return render_template('index.html', ports=filter_ports(ports), 
+                            speeds=speeds, modes=modes, last_error=last_error,
+                            server_is_running=bridge.status(), **settings)
 
 
 @app.route('/control', methods=['POST'])
@@ -59,6 +69,7 @@ def control():
 
     if bridge.status() or len(request.form) == 0:
         bridge.stop()
+        modbus_tcp_anoncer.stop()
         last_error = bridge.last_error()
     else:
         res = parse_form(request.form)
@@ -83,9 +94,27 @@ def control():
             if not bridge.start():
                 last_error = bridge.last_error().replace('\n', '<p>')
             else:
+                modbus_tcp_anoncer.port = bridge.tcp_port
+                modbus_tcp_anoncer.start()
                 last_error = None
 
     return redirect(url_for('index'))
+
+
+def filter_ports(portlist):
+    newports = []
+    for port in portlist:
+        match = COM_pattern.match(port.device)
+        inaccesable = int(match[1]) > 64
+        p = Portrecord(
+            device=port.device,
+            description = '{} (недоступно)'.format(port.description)
+                if inaccesable else port.description,
+            inaccesable = inaccesable
+        )
+        newports.append(p)
+        
+    return newports
 
 
 @app.route('/static/<path:path>', methods=['GET'])
@@ -129,12 +158,56 @@ def apply_msys2_portname(comport):
     return '/dev/ttyS{}'.format(int(match[1]) - 1)
 
 
+def all_my_ips():
+    interfaces = netifaces.interfaces() 
+
+    ip4 = [netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr'] 
+        for iface in interfaces
+        if netifaces.AF_INET in netifaces.ifaddresses(iface)]
+    ip6 = [netifaces.ifaddresses(iface)[netifaces.AF_INET6][0]['addr'] 
+        for iface in interfaces
+        if netifaces.AF_INET6 in netifaces.ifaddresses(iface)]
+        
+    ip4.remove('127.0.0.1')
+    ip6.remove('::1')
+    return [socket.inet_pton(socket.AF_INET, ip) for ip in ip4] + \
+           [socket.inet_pton(socket.AF_INET6, ip) for ip in ip6]
+
+
+def register_mdns_records():
+    hostname = socket.gethostname()
+    
+    ips = all_my_ips()
+
+    http_anoncer.service = "_http._tcp.local."
+    http_anoncer.name = "Modbus TCP to RTU bridge configurator._http._tcp.local."
+    http_anoncer.port = www_port
+    http_anoncer.address = ips
+    http_anoncer.desc = {'path': '/'}
+    http_anoncer.server = "{}-conf.modbusbridge.local.".format(hostname)
+    
+    modbus_tcp_anoncer.service = "_mbtcp._tcp.local."
+    modbus_tcp_anoncer.name = "Modbus TCP to RTU bridge._mbtcp._tcp.local."
+    # modbus_tcp_anoncer.port # after configuration done
+    modbus_tcp_anoncer.address = ips
+    modbus_tcp_anoncer.server = "{}.modbusbridge.local.".format(hostname)
+
+
 def open_browser():
     webbrowser.open_new('http://127.0.0.1:{}/'.format(www_port))
 
 
+def at_stop():
+    bridge.stop()
+    http_anoncer.stop()
+    modbus_tcp_anoncer.stop()
+    mDNSanoncer.close()
+
+
 if __name__ == "__main__":
     Timer(1, open_browser).start()
-    atexit.register(lambda: bridge.stop())
+    atexit.register(at_stop)
+    register_mdns_records()
+    http_anoncer.start()
     app.run(debug=True, use_debugger=False, use_reloader=False, passthrough_errors=True, 
         port=www_port, host='0.0.0.0')
