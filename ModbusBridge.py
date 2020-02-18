@@ -177,8 +177,8 @@ def all_my_ips():
            for iface in interfaces
            if netifaces.AF_INET6 in netifaces.ifaddresses(iface)]
 
-    ip4.remove('127.0.0.1')
-    ip6.remove('::1')
+    ip4 = filter(lambda ip: ip != '127.0.0.1' and not ip.startswith('169.254.'), ip4)
+    ip6 = filter(lambda ip: ip != '::1' and not ip.startswith('fe80:'), ip6)
     return [socket.inet_pton(socket.AF_INET, ip) for ip in ip4] + \
            [socket.inet_pton(socket.AF_INET6, ip) for ip in ip6]
 
