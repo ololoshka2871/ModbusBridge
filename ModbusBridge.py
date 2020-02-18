@@ -188,15 +188,15 @@ def register_mdns_records():
 
     ips = all_my_ips()
 
-    http_anoncer.service = "_http._tcp.local."
-    http_anoncer.name = "Modbus TCP to RTU bridge configurator._http._tcp.local."
+    http_anoncer.service = "_http._tcp.local.".format(hostname)
+    http_anoncer.name = "Modbus TCP to RTU bridge configurator on {}._http._tcp.local.".format(hostname)
     http_anoncer.port = www_port
     http_anoncer.address = ips
     http_anoncer.desc = {'path': '/'}
     http_anoncer.server = "{}-conf.modbusbridge.local.".format(hostname)
 
-    modbus_tcp_anoncer.service = "_mbtcp._tcp.local."
-    modbus_tcp_anoncer.name = "Modbus TCP to RTU bridge._mbtcp._tcp.local."
+    modbus_tcp_anoncer.service = "_mbtcp._tcp.local.".format(hostname)
+    modbus_tcp_anoncer.name = "Modbus TCP to RTU bridge on {}._mbtcp._tcp.local.".format(hostname)
     # modbus_tcp_anoncer.port # after configuration done
     modbus_tcp_anoncer.address = ips
     modbus_tcp_anoncer.server = "{}.modbusbridge.local.".format(hostname)
