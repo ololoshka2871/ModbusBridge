@@ -20,7 +20,7 @@
 1. Склонируйте репозиторий `mbusd`
 2. Отредактируйте файл CMakeLists.txt (только для Windows):
     Закоментируйте строки:
-```
+```bash
 #include(FindSystemd)
 
 #TODO  ISC_Posix,  prog_libtool
@@ -32,13 +32,13 @@
 
 3. Установите [msys2](https://www.msys2.org/) для вашей архитектуры (x86/amd64) (только для Windows)
 4. Используя консоль `msys2` установите нутри него gcc, make и cmake (только для Windows)
-```
+```bash
 $ pacman -Syy
 $ pacman -S gcc make cmake
 ```
 
 5. Соберите `mbusd`
-```
+```bash
 $ cd /<disk>/path/to/mbusd
 $ mkdir build && cd build
 $ cmake ..
@@ -55,12 +55,12 @@ $ make
 ### Упаковка в 1 файл
 Требуется модуль pyinstaller для python
 Выполните команду
-```py
-$ pyinstaller -w -F 
-    -i static/bridge.ico
-    --add-data "bin;bin" 
-    --add-data "static;static" 
-    --add-data "templates;templates" 
+```bash
+$ pyinstaller -w -F \
+    -i static/bridge.ico \
+    --add-data "bin;bin" \
+    --add-data "static;static" \
+    --add-data "templates;templates" \
     ModbusBridge.py 
 ```
 В каталоге `dist` появится исполняемый файл, котрый можно
