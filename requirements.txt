@@ -1,4 +1,4 @@
 serial>=3.4
-Flask==1.1.1
+Flask==2.3.2
 netifaces>=0.10.9
 zeroconf>=0.24.4
