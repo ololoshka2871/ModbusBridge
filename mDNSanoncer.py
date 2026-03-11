@@ -16,7 +16,7 @@ class mDNSanoncer:
         self.service = "_http._tcp.local."
         self.name = "name._tcp.local."
         self.port = 80
-        self.address=[socket.inet_aton("127.0.0.1")]
+        self.addresses =[socket.inet_aton("127.0.0.1")]
         self.desc = dict()
         self.server = ""
         
@@ -26,7 +26,7 @@ class mDNSanoncer:
         self._info = ServiceInfo(
             self.service,
             self.name,
-            address = self.address,
+            addresses  = self.addresses ,
             port = self.port,
             properties = self.desc,
             server = self.server
